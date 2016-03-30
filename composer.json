@@ -1,0 +1,21 @@
+{
+    "name": "cloudcompli/wqinvestigor",
+    "description": "Water Quality Investigator",
+    "license": "Proprietary",
+    "keywords": [],
+    "authors": [
+        { "name": "Eric Bollens", "email": "eric@cloudcompli.com" }
+    ],
+    "require": {
+        "socrata/soda-php": "*",
+        "phpfastcache/phpfastcache": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "4.0.*"
+    },
+    "autoload": {
+        "psr-4": {
+            "CloudCompli\\WQInvestigator\\": "src"
+        }
+    }
+}
