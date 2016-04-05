@@ -7,8 +7,8 @@
         { "name": "Eric Bollens", "email": "eric@cloudcompli.com" }
     ],
     "require": {
-        "socrata/soda-php": "*",
-        "phpfastcache/phpfastcache": "*"
+        "phpfastcache/phpfastcache": "*",
+        "socrata/soda-php": "*"
     },
     "require-dev": {
         "phpunit/phpunit": "4.0.*"

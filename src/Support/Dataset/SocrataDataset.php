@@ -6,9 +6,10 @@ use Socrata;
 
 class SocrataDataset
 {
+    use OptionsTrait;
+    
     protected $_socrata;
     protected $_cache = null;
-    protected $_options = [];
     protected $_useCache = true;
     
     public function __construct()
@@ -60,16 +61,6 @@ class SocrataDataset
         $this->_cache = $cache;
     }
     
-    public function setOption($key, $value)
-    {
-        $this->_options[$key] = $value;
-    }
-    
-    public function setOptions($options)
-    {
-        $this->_options = array_merge($this->_options, $options);
-    }
-    
     public function setSocrataHandler(Socrata $socrata)
     {
         $this->_socrata = $socrata;
@@ -92,14 +83,5 @@ class SocrataDataset
         $this->useCache(false);
         $callback($this);
         $this->useCache($originalCacheValue);
-    }
-    
-    public function withOptions($options, $callback)
-    {
-        $originalOptions = array_slice($this->_options,0,count($this->_options));
-        
-        $this->setOptions($options);
-        $callback($this);
-        $this->_options = $originalOptions;
     }
 }
