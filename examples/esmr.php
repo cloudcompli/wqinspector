@@ -10,7 +10,6 @@ $cache = phpFastCache\CacheManager::Files([
 ]);
 
 $esmr = new CloudCompli\WQInvestigator\CIWQS\ESMR($socrata);
-$esmr->setSocrataHandler($socrata);
 $esmr->setCacheHandler($cache);
 $esmr->setOptions([
     'region_code' => '8',

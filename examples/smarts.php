@@ -5,18 +5,18 @@ require __DIR__.'/config.php';
 
 $dataBasePath = __DIR__.'/data/ocwatersheds/';
 
-$smartsParameters = new CloudCompli\WQInvestigator\SMARTS\ParameterDataset([
+$smarts = new CloudCompli\WQInvestigator\SMARTS\ParameterDataset([
     $dataBasePath.'smarts-ind-1415.html',
     $dataBasePath.'smarts-ind-1516.html',
     $dataBasePath.'smarts-const-1415.html',
     $dataBasePath.'smarts-const-1516.html',
 ]);
 
-var_dump($smartsParameters->getParameters());
+var_dump($smarts->getParameters());
 
-$smartsParameters->filter([
+$smarts->filter([
     'parameter' => 'Selenium, Total'
-], function($smartsParameters){
-    var_dump($smartsParameters->getParameterResultsBySite());
-    var_dump($smartsParameters->getData());
+], function($smarts){
+    var_dump($smarts->getParameterResultsBySite());
+    var_dump($smarts->getData());
 });

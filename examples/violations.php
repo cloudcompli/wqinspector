@@ -10,7 +10,6 @@ $cache = phpFastCache\CacheManager::Files([
 ]);
 
 $violations = new CloudCompli\WQInvestigator\SMARTS\StormwaterViolations($socrata);
-$violations->setSocrataHandler($socrata);
 $violations->setCacheHandler($cache);
 $violations->setOptions([
     'region_code' => '8',
