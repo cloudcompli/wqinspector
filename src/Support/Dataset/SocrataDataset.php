@@ -12,9 +12,10 @@ class SocrataDataset
     protected $_cache = null;
     protected $_useCache = true;
     
-    public function __construct()
+    public function __construct($socrata = null)
     {
-        
+        if($socrata)
+            $this->setSocrataHandler($socrata);
     }
     
     public function computeCacheKey($url, $options = [])
