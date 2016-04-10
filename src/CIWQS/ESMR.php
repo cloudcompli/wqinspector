@@ -44,11 +44,9 @@ class ESMR extends SocrataDataset
         return $params;
     }
     
-    public function getParameterReports($parameterName)
+    public function getData($baseQueryParameters = [])
     {
-        $queryParameters = $this->makeQueryParameters([
-            'parameter' => $parameterName
-        ]);
+        $queryParameters = $this->makeQueryParameters($baseQueryParameters);
         
         $result = [];
         $this->getForEachChunk('/resource/64tg-janj.json', $queryParameters, function($response) use (&$result) {
@@ -57,6 +55,13 @@ class ESMR extends SocrataDataset
             }
         });
         return $result;
+    }
+    
+    public function getParameterReports($parameterName)
+    {
+        return $this->getData([
+            'parameter' => $parameterName
+        ]);
     }
     
     public function getParameterByRegulatoryMeasureId($parameterName)
