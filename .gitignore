@@ -2,3 +2,5 @@
 /composer.lock
 /examples/cache
 /vendor
+.work/
+.ai/bootstrap/phase-2-findings-*.yaml

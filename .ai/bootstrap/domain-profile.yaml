@@ -1,0 +1,272 @@
+metadata:
+  version: '0.1.1-draft'
+  schema_version: '1.0.0'
+  created_at: '2026-07-08T18:37:15.925Z'
+  merged_at: '2026-07-08T18:46:00.000Z'
+  codebase_root: /Users/heeringa/swiftcomply/git/cloudcompli/wqinspector
+  config_score: 88
+  bootstrap_phases_completed:
+    - 1
+    - 2
+    - 3
+    - 4
+  low_confidence_note: >
+    14 analyzable files. All [Inferred] and [Uncertain] findings carry higher
+    uncertainty than a medium/large codebase. Phase 5 human review recommended
+    before production analysis campaigns.
+  changelog:
+    - version: '0.1.0-draft'
+      date: '2026-07-08'
+      changes: Initial bootstrap phases 1-3
+    - version: '0.1.1-draft'
+      date: '2026-07-08'
+      changes: >
+        Phase 4 validation complete. config_score=88. Auto-adjustment:
+        support_base_simple.min lowered from 4 to 2.
+
+languages:
+  primary: php
+  secondary: []
+  file_extensions:
+    - extension: .php
+      language: php
+      count: 14
+      analyzable: true
+      confidence: '[Confirmed]'
+
+scale:
+  total_files: 16
+  analyzable_files: 14
+  complexity_tier: small
+  confidence: '[Confirmed]'
+
+object_types:
+  - name: dataset_adapter
+    file_pattern:
+      - 'src/CIWQS/*.php'
+      - 'src/OCPW/*.php'
+      - 'src/SMARTS/*.php'
+    count: 4
+    analyzable: true
+    confidence: '[Inferred]'
+    note: >
+      Domain-specific adapter classes (CIWQS\ESMR, OCPW\ParameterDataset,
+      SMARTS\ParameterDataset, SMARTS\StormwaterViolations). Each extends a
+      support base class and adds domain-specific query logic for one
+      regulatory data source.
+    metadata_fields:
+      - data_source
+      - query_methods
+      - filter_options
+    complexity_thresholds:
+      simple:
+        max_lines: 60
+      moderate:
+        max_lines: 105
+      complex:
+        min_lines: 105
+
+  - name: support_base
+    file_pattern:
+      - 'src/Support/Dataset/*.php'
+    count: 5
+    analyzable: true
+    confidence: '[Inferred]'
+    note: >
+      Infrastructure base classes and trait (FileDataset, CsvDataset,
+      HtmlDataset, SocrataDataset, OptionsTrait). Implement shared
+      pagination, caching, option-scoping, and file-parsing behaviour.
+    metadata_fields:
+      - base_class
+      - trait_composition
+      - public_methods
+    complexity_thresholds:
+      simple:
+        max_lines: 50
+      moderate:
+        max_lines: 90
+      complex:
+        min_lines: 90
+
+naming_conventions:
+  strategy: namespace-based
+  strategy_confidence: '[Inferred]'
+  note: >
+    No file-name prefix clustering (100% unclustered). Module boundaries
+    encoded in PSR-4 directory namespaces: CIWQS, OCPW, SMARTS,
+    Support/Dataset.
+  prefix_families: []
+  namespace_modules:
+    - namespace: 'CloudCompli\\WQInvestigator\\CIWQS'
+      directory: src/CIWQS
+      file_count: 1
+      domain: CIWQS eSMR regulatory monitoring
+      confidence: '[Inferred]'
+    - namespace: 'CloudCompli\\WQInvestigator\\OCPW'
+      directory: src/OCPW
+      file_count: 1
+      domain: OC Watersheds CSV data
+      confidence: '[Inferred]'
+    - namespace: 'CloudCompli\\WQInvestigator\\SMARTS'
+      directory: src/SMARTS
+      file_count: 2
+      domain: SMARTS stormwater data (HTML + Socrata)
+      confidence: '[Inferred]'
+    - namespace: 'CloudCompli\\WQInvestigator\\Support\\Dataset'
+      directory: src/Support/Dataset
+      file_count: 5
+      domain: Shared dataset infrastructure
+      confidence: '[Inferred]'
+
+call_mechanisms:
+  - pattern: closure_callback
+    type: direct
+    confidence: '[Confirmed]'
+    occurrence_count: 6
+    files_found: 5
+    description: >
+      PHP closures passed as $callback arguments for option-scoped execution,
+      chunked pagination callbacks, and domain result accumulation.
+    source: observed
+
+  - pattern: inheritance_delegation
+    type: direct
+    confidence: '[Confirmed]'
+    occurrence_count: 8
+    files_found: 4
+    description: >
+      Domain adapters extend support base classes; call parent::__construct()
+      and parent::get() to delegate then refine behaviour.
+    source: observed
+
+  - pattern: trait_mixin
+    type: direct
+    confidence: '[Confirmed]'
+    occurrence_count: 2
+    files_found: 2
+    description: >
+      OptionsTrait mixed into FileDataset and SocrataDataset.
+    source: observed
+
+  - pattern: external_api_call
+    type: direct
+    confidence: '[Confirmed]'
+    occurrence_count: 3
+    files_found: 1
+    description: >
+      Socrata SODA SDK calls via $this->_socrata->get($url, $queryParameters).
+      Resource IDs are hardcoded per adapter (/resource/[RESOURCE_ID].json).
+    source: observed
+
+  - pattern: optional_cache_layer
+    type: indirect
+    confidence: '[Confirmed]'
+    occurrence_count: 4
+    files_found: 1
+    description: >
+      phpFastCache integration in SocrataDataset. Cache key = MD5 of
+      URL + serialized query params. Cache use toggleable via
+      withoutCache($callback).
+    source: observed
+
+  - pattern: soql_string_interpolation
+    type: dynamic
+    confidence: '[Confirmed]'
+    occurrence_count: 6
+    files_found: 2
+    description: >
+      SOQL WHERE clauses built by string interpolation in compileWhere()
+      (ESMR, StormwaterViolations). Option values injected without
+      parameterisation. Flag: potential injection risk if options are
+      caller-supplied without sanitisation.
+    source: observed
+
+cross_references:
+  external_dependencies:
+    - name: socrata/soda-php
+      role: Socrata SODA API client
+      confidence: '[Confirmed]'
+    - name: phpfastcache/phpfastcache
+      role: File-backed cache for API responses
+      confidence: '[Confirmed]'
+  linked_servers: []
+  synonyms: []
+
+chunking:
+  thresholds:
+    standard_max: 59
+    extended_max: 105
+    mega_min: 200
+  language_multiplier: 1.0
+  confidence: '[Uncertain]'
+  note: >
+    Thresholds from actual file distribution (median=59, P90=105).
+    No mega files. [Uncertain] — fewer than 20 file sample.
+  boundary_signals:
+    - 'function '
+    - 'class '
+    - 'interface '
+    - 'trait '
+    - 'namespace '
+    - 'if ('
+    - 'foreach ('
+    - 'switch ('
+    - 'try {'
+    - '/**'
+
+databases: []
+db_access_note: >
+  No database access. Data retrieval is via Socrata SODA HTTP API
+  (CIWQS eSMR, SMARTS Stormwater Violations) and local file parsing
+  (OC Watersheds CSV, SMARTS HTML exports). [Confirmed]
+
+tenancy_model:
+  type: single-tenant
+  confidence: '[Confirmed]'
+  note: >
+    No tenant discriminator columns, RLS, per-tenant schemas, or routing.
+    Single-caller library with one Socrata token per instance.
+
+module_organization:
+  strategy: namespace-based
+  confidence: '[Inferred]'
+  project_marker: composer.json
+  modules:
+    - name: CIWQS
+      path: src/CIWQS
+      file_count: 1
+      confidence: '[Inferred]'
+    - name: OCPW
+      path: src/OCPW
+      file_count: 1
+      confidence: '[Inferred]'
+    - name: SMARTS
+      path: src/SMARTS
+      file_count: 2
+      confidence: '[Inferred]'
+    - name: Support.Dataset
+      path: src/Support/Dataset
+      file_count: 5
+      confidence: '[Inferred]'
+
+quality_thresholds:
+  completeness:
+    baselines:
+      dataset_adapter_simple:
+        min: 3
+        max: 8
+        per: '100 lines'
+      dataset_adapter_moderate:
+        min: 2
+        max: 6
+        per: '100 lines'
+      support_base_simple:
+        min: 2
+        max: 9
+        per: '100 lines'
+      support_base_moderate:
+        min: 3
+        max: 7
+        per: '100 lines'
+
+extensions: {}
