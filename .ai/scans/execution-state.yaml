@@ -5,14 +5,14 @@
 scan_id: "wqinspector-scan-20260708T000000Z"
 created_at: "2026-07-08T00:00:00Z"
 total_batches: 3
-next_batch: "batch-001"
+next_batch: null   # all batches complete (reconciled by /consolidate-findings from status/ files)
 
 batches:
   - id: "batch-001"
     name: "Domain Adapters"
     topic_slug: "domain-adapters"
     mode: "analysis"
-    status: "pending"
+    status: "complete"
     rationale: >
       All four regulatory-source adapter classes grouped together as a vertical slice.
       Each extends a Support base class and implements domain-specific query logic for
@@ -49,7 +49,7 @@ batches:
     name: "Support Infrastructure"
     topic_slug: "support-infrastructure"
     mode: "analysis"
-    status: "pending"
+    status: "complete"
     rationale: >
       Five shared base classes and trait that underpin all domain adapters.
       FileDataset is the root ancestor; CsvDataset and HtmlDataset are thin
@@ -91,7 +91,7 @@ batches:
     name: "Examples and Entry Points"
     topic_slug: "examples-and-entry-points"
     mode: "analysis"
-    status: "pending"
+    status: "complete"
     rationale: >
       Five runnable example scripts that demonstrate the public API surface and
       expected call patterns for all four data sources. config.php provides
