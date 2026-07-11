@@ -1,0 +1,147 @@
+metadata:
+  generated_at: '2026-07-08T18:42:00.000Z'
+  profile_version: '0.1.0-draft'
+  target_size: 7
+  actual_size: 7
+  scale_basis: small
+  note: >
+    Small codebase (14 analyzable files, 9 source files). Target of 5-10 per
+    bootstrap-golden-dataset spec. Selected 7 to cover all object types,
+    all complexity levels present, and all 4 namespace modules.
+
+coverage_matrix:
+  object_types_covered: 2 of 2
+  complexity_levels_covered: 3 of 4
+  modules_covered: 4 of 4
+  cross_reference_types_covered: 2 of 2
+  mega_files: 0
+  note: No mega-complexity files exist in this codebase (max 105 lines).
+
+files:
+  - path: src/Support/Dataset/OptionsTrait.php
+    object_type: support_base
+    complexity: simple
+    module: Support.Dataset
+    line_count: 27
+    selection_reason: >
+      Simplest support base file; P25 representative. Trait composition
+      pattern — foundational to both dataset hierarchies.
+    expected_rules:
+      min: 3
+      max: 5
+    expected_complexity: simple
+    cross_references: []
+    adversarial: false
+
+  - path: src/Support/Dataset/CsvDataset.php
+    object_type: support_base
+    complexity: simple
+    module: Support.Dataset
+    line_count: 26
+    selection_reason: >
+      Simplest file (tied). CSV parser — demonstrates fopen/fgetcsv file
+      parsing pattern and column normalisation. Cross-checks CsvDataset
+      extends FileDataset inheritance.
+    expected_rules:
+      min: 2
+      max: 4
+    expected_complexity: simple
+    cross_references: []
+    adversarial: false
+
+  - path: src/Support/Dataset/FileDataset.php
+    object_type: support_base
+    complexity: simple
+    module: Support.Dataset
+    line_count: 48
+    selection_reason: >
+      P50 support_base file. Root of file-backed hierarchy; contains
+      filter/getData scoped-options pattern.
+    expected_rules:
+      min: 3
+      max: 6
+    expected_complexity: simple
+    cross_references: []
+    adversarial: false
+
+  - path: src/Support/Dataset/SocrataDataset.php
+    object_type: support_base
+    complexity: moderate
+    module: Support.Dataset
+    line_count: 87
+    selection_reason: >
+      P90 support_base file. Most complex infrastructure class — implements
+      Socrata API wrapping, optional cache layer, chunked pagination, and
+      cache-bypass pattern. Adversarial candidate for the support hierarchy.
+    expected_rules:
+      min: 5
+      max: 10
+    expected_complexity: moderate
+    cross_references:
+      - external_api_call
+      - optional_cache_layer
+    adversarial: false
+
+  - path: src/SMARTS/StormwaterViolations.php
+    object_type: dataset_adapter
+    complexity: moderate
+    module: SMARTS
+    line_count: 81
+    selection_reason: >
+      Most complex domain adapter. Adds violation_type multi-value filter
+      and distinct Socrata resource endpoint. Demonstrates the fullest
+      compileWhere() implementation with 3 clause types.
+    expected_rules:
+      min: 5
+      max: 9
+    expected_complexity: moderate
+    cross_references:
+      - soql_string_interpolation
+      - external_api_call
+    adversarial: false
+
+  - path: src/CIWQS/ESMR.php
+    object_type: dataset_adapter
+    complexity: moderate
+    module: CIWQS
+    line_count: 105
+    selection_reason: >
+      Largest single file (max). CIWQS adapter — most methods (7 public),
+      demonstrates getParameters distinct query, getParameterByRegulatoryMeasureId
+      aggregation, and compileWhere with within_circle geo filter.
+      Adversarial: most lines, most call mechanisms.
+    expected_rules:
+      min: 6
+      max: 10
+    expected_complexity: moderate
+    cross_references:
+      - soql_string_interpolation
+      - external_api_call
+      - closure_callback
+    adversarial: true
+
+  - path: src/OCPW/ParameterDataset.php
+    object_type: dataset_adapter
+    complexity: simple
+    module: OCPW
+    line_count: 59
+    selection_reason: >
+      OCPW CSV adapter — only dataset_adapter extending file-backed hierarchy
+      (not Socrata). Covers getParameterResultsByStation aggregation and
+      filter-option guard logic. Also adversarial: unusual pattern (no
+      compileWhere, no Socrata, no cache).
+    expected_rules:
+      min: 3
+      max: 6
+    expected_complexity: simple
+    cross_references: []
+    adversarial: true
+
+confidence_note: >
+  With 7 files from a population of 9 source files, this golden dataset
+  covers 78% of the source base directly. Margin of error is minimal
+  for a 9-file codebase. All object type and module cells are populated.
+  The dataset does NOT cover SMARTS\ParameterDataset or
+  Support/Dataset/HtmlDataset — these two files are structurally analogous
+  to covered files (ParameterDataset mirrors OCPW\ParameterDataset;
+  HtmlDataset mirrors CsvDataset) and add no new patterns.

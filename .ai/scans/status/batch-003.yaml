@@ -1,0 +1,11 @@
+batch_id: batch-003
+status: complete
+started_at: "2026-07-09T00:00:00Z"
+completed_at: "2026-07-09T00:00:00Z"
+topic_slug: "examples-and-entry-points"
+files_analyzed: 5
+rules_extracted: 13
+confidence:
+  confirmed: 82
+  inferred: 12
+  uncertain: 6

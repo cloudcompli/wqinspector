@@ -1,0 +1,107 @@
+metadata:
+  surveyed_at: '2026-07-08T18:37:15.925Z'
+  codebase_root: /Users/heeringa/swiftcomply/git/cloudcompli/wqinspector
+  survey_version: '1.0.0'
+  generator: bootstrap-survey.js v1.0.0
+  low_confidence_note: >
+    Only 14 analyzable files (small repo). All survey findings are best-effort.
+    Confidence markers reflect this small sample size throughout.
+
+languages:
+  primary: php
+  secondary: []
+  file_extensions:
+    - extension: .php
+      language: php
+      count: 14
+      total_lines: 695
+      analyzable: true
+      confidence: '[Confirmed]'
+
+directory_pattern: namespace-based
+directory_pattern_confidence: '[Inferred]'
+
+directory_tree:
+  examples:
+    cache: {}
+    data: {}
+  src:
+    CIWQS: {}
+    OCPW: {}
+    SMARTS: {}
+    Support:
+      Dataset: {}
+
+file_types:
+  - extension: .php
+    count: 14
+    category: source
+    language: php
+  - extension: .md
+    count: 1
+    category: documentation
+    language: documentation
+  - extension: .json
+    count: 1
+    category: config
+    language: config
+
+naming_analysis:
+  confidence: '[Uncertain]'
+  unclustered_percentage: 100
+  note: >
+    100% of analyzable files have no clear naming prefix at 4-char level.
+    Module boundaries come from namespace directory structure (CIWQS, OCPW, SMARTS,
+    Support/Dataset), not filename prefixes.
+  prefix_levels:
+    char_2:
+      total_eligible: 14
+      clustered_count: 0
+      unclustered_count: 14
+      unclustered_percentage: 100
+      clusters: {}
+    char_4:
+      total_eligible: 14
+      clustered_count: 0
+      unclustered_count: 14
+      unclustered_percentage: 100
+      clusters: {}
+    char_6:
+      total_eligible: 11
+      clustered_count: 0
+      unclustered_count: 11
+      unclustered_percentage: 100
+      clusters: {}
+
+scale:
+  total_files: 16
+  total_analyzable: 14
+  total_directories: 9
+  total_lines: 695
+  binary_files: 0
+  generated_files: 0
+  infrastructure_files: 1
+  complexity_tier: small
+
+size_distribution:
+  min_lines: 26
+  median_lines: 59
+  p90_lines: 105
+  p99_lines: 105
+  max_lines: 105
+  total_lines: 518
+
+build_systems:
+  - composer
+
+ci_cd: []
+schema_tools: []
+
+summary:
+  primary_language: php
+  total_files: 16
+  analyzable_files: 14
+  complexity_tier: small
+  naming_confidence: '[Uncertain]'
+  directory_pattern: namespace-based
+  recommended_next: /bootstrap-profile to generate domain profile from this survey

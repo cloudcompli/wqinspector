@@ -1,0 +1,11 @@
+batch_id: batch-001
+status: complete
+started_at: "2026-07-09T00:00:00Z"
+completed_at: "2026-07-09T00:00:00Z"
+topic_slug: "domain-adapters"
+files_analyzed: 4
+rules_extracted: 27
+confidence:
+  confirmed: 71
+  inferred: 21
+  uncertain: 8

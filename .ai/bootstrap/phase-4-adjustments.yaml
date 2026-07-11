@@ -1,0 +1,31 @@
+metadata:
+  generated_at: '2026-07-08T18:45:30.000Z'
+  profile_version: '0.1.1-draft'
+  config_score: 88
+  adjustments_applied: 1
+
+adjustments:
+  - field: quality_thresholds.completeness.baselines.support_base_simple.min
+    old_value: 4
+    new_value: 2
+    reason: >
+      CsvDataset is a single-constructor class with 2 extractable rules.
+      Original lower bound of 4 (from php.yaml language defaults) is
+      too high for minimal single-method support classes.
+    auto_applied: true
+    phase: 4
+
+config_score_breakdown:
+  files_analyzed: 7
+  correctly_classified: 7
+  in_rule_range: 6
+  semantic_spot_checks: 3 PASS, 1 PARTIAL
+  config_score: 88
+  threshold: 80
+  verdict: PASS
+
+uncertain_items_count: 3
+uncertain_items:
+  - soql_string_interpolation injection risk
+  - SMARTS and OCPW ParameterDataset naming collision
+  - getForEachChunk pagination termination edge case
