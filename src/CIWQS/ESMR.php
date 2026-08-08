@@ -35,6 +35,17 @@ class ESMR extends SocrataDataset
         return count($where) > 0 ? ('('.implode(') AND (', $where).')') : null;
     }
     
+    /**
+     * Merge the option-derived clause into a caller's query parameters.
+     *
+     * A `$where` the caller passes in is concatenated as-is — this method cannot
+     * tell a field name from a value, so it cannot escape it for you. Build any
+     * caller-supplied clause with SoqlLiteral. The option-derived half is always
+     * escaped by compileWhere().
+     *
+     * @param array $params
+     * @return array
+     */
     public function makeQueryParameters($params)
     {
         if(($compiledWhere = $this->compileWhere()) !== null){

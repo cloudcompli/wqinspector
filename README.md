@@ -70,7 +70,7 @@ Options can be applied within a scope so that they don't apply to subsequent que
 
 ```php
 $esmr->withOptions([
-    'within_circle' => [$_GET['latitude'], $_GET['longitude'], $_GET['radius']]
+    'within_circle' => [33.68813, -117.819, 20000]
 ], function($esmr){
     // ..
 });
