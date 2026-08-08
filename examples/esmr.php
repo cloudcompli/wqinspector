@@ -17,49 +17,10 @@ $esmr->setOptions([
     'before' => '2016-01-01T00:00:00'
 ]);
 
-$parameters = $esmr->getParameters();
-sort($parameters);
+var_dump($esmr->getParameters());
 
-?>
-
-<form action="esmr.php" method="GET">
-    <select name="parameter" required>
-        <?php foreach($parameters as $parameter){ ?>
-        <option><?php echo $parameter; ?></option>
-        <?php } ?>
-    </select>
-    <br>
-    <label>Latitude</label>
-    <input name="latitude" value="33.68813" required>
-    <br>
-    <label>Longitude</label>
-    <input name="longitude" value="-117.819" required>
-    <br>
-    <label>Radius (meters)</label>
-    <input name="radius" value="20000" required>
-    <br>
-    <input type="submit" value="Search">
-</form>
-
-<?php
-
-if(isset($_GET['parameter']) 
-        && isset($_GET['latitude']) 
-        && isset($_GET['longitude']) 
-        && isset($_GET['radius'])){
-    
-    echo '<script>';
-    foreach(['parameter','latitude','longitude','radius'] as $field){
-        echo 'document.querySelectorAll(\'[name="'.$field.'"]\')[0].value = "'.$_GET[$field].'";';
-    }
-    echo '</script>';
-    
-    $esmr->withOptions([
-        'within_circle' => [$_GET['latitude'], $_GET['longitude'], $_GET['radius']]
-    ], function($esmr){
-        var_dump($esmr->getParameterByRegulatoryMeasureId($_GET['parameter']));
-    });
-    
-}
-
-?>
+$esmr->withOptions([
+    'within_circle' => ['33.68813', '-117.819', '20000']
+], function($esmr){
+    var_dump($esmr->getParameterByRegulatoryMeasureId('Selenium, Total'));
+});

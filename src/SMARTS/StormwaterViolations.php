@@ -3,6 +3,7 @@
 namespace CloudCompli\WQInvestigator\SMARTS;
 
 use CloudCompli\WQInvestigator\Support\Dataset\SocrataDataset;
+use CloudCompli\WQInvestigator\Support\Soql\SoqlLiteral;
 use Socrata;
 
 class StormwaterViolations extends SocrataDataset
@@ -21,16 +22,19 @@ class StormwaterViolations extends SocrataDataset
         $where = [];
         
         if(array_key_exists('before', $this->_options) && array_key_exists('after', $this->_options)){
-            $where[] = "occurred_on > '".$this->_options['after']."' and occurred_on < '".$this->_options['before']."'";
+            $where[] = "occurred_on > ".SoqlLiteral::text($this->_options['after'])." and occurred_on < ".SoqlLiteral::text($this->_options['before']);
         }
-        
+
         if(array_key_exists('within_circle', $this->_options)){
-            $where[] = "within_circle(location_1, ".$this->_options['within_circle'][0].", ".$this->_options['within_circle'][1].", ".$this->_options['within_circle'][2].")";
+            $where[] = "within_circle(location_1, "
+                .SoqlLiteral::number($this->_options['within_circle'][0]).", "
+                .SoqlLiteral::number($this->_options['within_circle'][1]).", "
+                .SoqlLiteral::number($this->_options['within_circle'][2]).")";
         }
-        
+
         if(array_key_exists('violation_type', $this->_options)){
             $where[] = implode(' OR ', array_map(function($violationType){
-                return "violation_type = '".$violationType."'";
+                return "violation_type = ".SoqlLiteral::text($violationType);
             }, $this->_options['violation_type']));
         }
         
@@ -41,7 +45,7 @@ class StormwaterViolations extends SocrataDataset
     {
         if(($compiledWhere = $this->compileWhere()) !== null){
             if(array_key_exists('$where', $params)){
-                $params['$where'] = '('.$params['where'].') AND ('.$compiledWhere.')';
+                $params['$where'] = '('.$params['$where'].') AND ('.$compiledWhere.')';
             }else{
                 $params['$where'] = $compiledWhere;
             }

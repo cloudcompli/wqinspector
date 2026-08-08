@@ -3,6 +3,7 @@
 namespace CloudCompli\WQInvestigator\CIWQS;
 
 use CloudCompli\WQInvestigator\Support\Dataset\SocrataDataset;
+use CloudCompli\WQInvestigator\Support\Soql\SoqlLiteral;
 use Socrata;
 
 class ESMR extends SocrataDataset
@@ -21,11 +22,14 @@ class ESMR extends SocrataDataset
         $where = [];
         
         if(array_key_exists('before', $this->_options) && array_key_exists('after', $this->_options)){
-            $where[] = "sample_date between '".$this->_options['after']."' and '".$this->_options['before']."'";
+            $where[] = "sample_date between ".SoqlLiteral::text($this->_options['after'])." and ".SoqlLiteral::text($this->_options['before']);
         }
-        
+
         if(array_key_exists('within_circle', $this->_options)){
-            $where[] = "within_circle(location, ".$this->_options['within_circle'][0].", ".$this->_options['within_circle'][1].", ".$this->_options['within_circle'][2].")";
+            $where[] = "within_circle(location, "
+                .SoqlLiteral::number($this->_options['within_circle'][0]).", "
+                .SoqlLiteral::number($this->_options['within_circle'][1]).", "
+                .SoqlLiteral::number($this->_options['within_circle'][2]).")";
         }
         
         return count($where) > 0 ? ('('.implode(') AND (', $where).')') : null;
@@ -35,7 +39,7 @@ class ESMR extends SocrataDataset
     {
         if(($compiledWhere = $this->compileWhere()) !== null){
             if(array_key_exists('$where', $params)){
-                $params['$where'] = '('.$params['where'].') AND ('.$compiledWhere.')';
+                $params['$where'] = '('.$params['$where'].') AND ('.$compiledWhere.')';
             }else{
                 $params['$where'] = $compiledWhere;
             }
