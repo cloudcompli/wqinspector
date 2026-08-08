@@ -80,7 +80,9 @@ class SoqlLiteral
             $candidate = trim((string)$value);
         }
 
-        if(!preg_match('/^[+-]?[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?$/', $candidate)){
+        // The D modifier matters: without it `$` also matches before a trailing
+        // newline, which would let one through.
+        if(!preg_match('/^[+-]?[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?$/D', $candidate)){
             throw new InvalidArgumentException('SoQL numeric literal expects a number, got '.var_export($value, true));
         }
 

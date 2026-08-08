@@ -134,29 +134,74 @@ class SoqlInjectionTest extends PHPUnit_Framework_TestCase
     }
 
     /**
-     * The list above is only as good as its coverage, so check it against the
-     * source: any option compileWhere() reads must have a case here. Adding an
-     * option and interpolating it raw fails this test.
+     * Drives the payload through every option key in a broad dictionary and
+     * asserts the literal invariant on whatever comes back, so an option added
+     * later is covered without anyone remembering to extend the table.
+     *
+     * This is the property check; testEveryOptionsKeyInSourceHasACase() is the
+     * spelling check. Neither is sufficient alone — this one only sees keys the
+     * dictionary happens to name.
      */
-    public function testEveryOptionReadByCompileWhereIsCovered()
+    public function testNoOptionKeyInABroadDictionaryCanEscapeItsLiteral()
     {
+        $keys = [
+            'after', 'before', 'violation_type', 'region_code', 'parameter',
+            'facility', 'facility_name', 'reg_meas_id', 'regMeasId', 'mon_location',
+            'status', 'operator', 'county', 'order', 'select', 'group', 'limit',
+        ];
+
+        foreach(self::payloads() as $payloadName => $payload){
+            foreach(['CloudCompli\WQInvestigator\CIWQS\ESMR',
+                     'CloudCompli\WQInvestigator\SMARTS\StormwaterViolations'] as $class){
+                $options = [];
+                foreach($keys as $key){
+                    $options[$key] = $payload;
+                }
+                // violation_type is read as a list; give it the shape it expects.
+                $options['violation_type'] = [$payload, $payload];
+
+                $dataset = new $class();
+                $dataset->setOptions($options);
+
+                $clause = $dataset->compileWhere();
+                if($clause === null){
+                    continue;
+                }
+
+                $this->assertPayloadStaysInsideALiteral($clause, 'OR 1=1 --', $class.' / '.$payloadName);
+            }
+        }
+    }
+
+    /**
+     * Checks the table against the source: any option key compileWhere() names
+     * must have a case above.
+     *
+     * This catches the common shape — a quoted key indexed off $this->_options —
+     * and nothing more. A camelCase key, a variable key, a curly-brace offset or
+     * a read moved behind an accessor all slip past it, which is why the property
+     * test above exists as well.
+     */
+    public function testEveryOptionsKeyInSourceHasACase()
+    {
+        // region_code is read by get(), not compileWhere(). It becomes a SODA
+        // simple filter, which the transport urlencodes key and value — so it
+        // never reaches a SoQL clause and has no injection case here.
         $covered = [
-            'CloudCompli\WQInvestigator\CIWQS\ESMR' => ['after', 'before', 'within_circle'],
-            'CloudCompli\WQInvestigator\SMARTS\StormwaterViolations' => ['after', 'before', 'within_circle', 'violation_type'],
+            'CloudCompli\WQInvestigator\CIWQS\ESMR' => ['after', 'before', 'region_code', 'within_circle'],
+            'CloudCompli\WQInvestigator\SMARTS\StormwaterViolations' => ['after', 'before', 'region_code', 'violation_type', 'within_circle'],
         ];
 
         foreach($covered as $class => $expected){
-            $method = new ReflectionMethod($class, 'compileWhere');
-            $source = implode('', array_slice(
-                file($method->getFileName()),
-                $method->getStartLine() - 1,
-                $method->getEndLine() - $method->getStartLine() + 1
-            ));
+            // The whole file, not just compileWhere()'s line range — a read moved
+            // into a helper would otherwise leave the slice and vanish.
+            $reflected = new ReflectionClass($class);
+            $source = file_get_contents($reflected->getFileName());
 
-            // Deliberately loose about how the option is read — array_key_exists,
-            // isset, a direct index, either quote style, any spacing. A narrower
-            // pattern is one someone can word around without noticing.
-            preg_match_all('/_options\s*\[\s*[\'"]([a-z_]+)[\'"]\s*\]/', $source, $matches);
+            // Loose about how the option is read: array_key_exists, isset, a
+            // direct index, either quote style, a curly-brace offset, any casing,
+            // any spacing. A narrower pattern is one someone words around.
+            preg_match_all('/_options\s*[\[{]\s*[\'"]([A-Za-z0-9_]+)[\'"]\s*[\]}]/', $source, $matches);
             $read = array_values(array_unique($matches[1]));
 
             sort($read);

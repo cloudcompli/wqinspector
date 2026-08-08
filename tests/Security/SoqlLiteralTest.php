@@ -107,6 +107,21 @@ class SoqlLiteralTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * The float path renders at 14 decimals, so magnitudes below that collapse to
+     * zero and very large ones print their full binary expansion. Pinned here as
+     * a recorded decision rather than a surprise: neither is injectable, both are
+     * lossy, and neither shape occurs in a coordinate or a radius.
+     */
+    public function testNumberFloatRenderingIsLossyAtTheExtremes()
+    {
+        $this->assertSame('0', SoqlLiteral::number(1.0e-30));
+        $this->assertSame('0', SoqlLiteral::number(1.5e-16));
+        $this->assertSame('0', SoqlLiteral::number(0.0));
+        $this->assertSame('0', SoqlLiteral::number(-0.0));
+        $this->assertSame('1000000000000000019884624838656', SoqlLiteral::number(1.0e30));
+    }
+
+    /**
      * @dataProvider nonFiniteFloats
      */
     public function testNumberRejectsNonFiniteFloats($value)
