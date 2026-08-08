@@ -17,23 +17,39 @@ use CloudCompli\WQInvestigator\SMARTS\StormwaterViolations;
  */
 class SoqlInjectionTest extends PHPUnit_Framework_TestCase
 {
-    /** Closes the literal, appends an always-true predicate. */
-    const BREAKOUT = "x' OR 1=1 --";
+    /**
+     * Each closes the literal and appends an always-true predicate.
+     *
+     * The multi-quote variants matter: escaping only the *first* quote — a
+     * preg_replace with a limit rather than a str_replace — still passes a suite
+     * whose every payload carries exactly one quote, and still lets the payload
+     * out.
+     */
+    public static function payloads()
+    {
+        return [
+            'one quote'    => "x' OR 1=1 --",
+            'two quotes'   => "x'' OR 1=1 --",
+            'three quotes' => "x''' OR 1=1 --",
+            'only quotes'  => "''''",
+        ];
+    }
 
     /**
      * Every option key each class reads, and how to build options that put a
-     * payload at one specific position. assertEveryOptionIsCovered() checks this
-     * list against the source, so a new option cannot be added without a case.
+     * payload at one specific position. testEveryOptionReadByCompileWhereIsCovered()
+     * checks this list against the source, so a new option cannot be added
+     * without a case.
      */
-    public static function stringPositions()
+    public static function stringPositions($payload)
     {
         return [
-            'ESMR after'  => ['CloudCompli\WQInvestigator\CIWQS\ESMR', ['after' => self::BREAKOUT, 'before' => '2016-01-01']],
-            'ESMR before' => ['CloudCompli\WQInvestigator\CIWQS\ESMR', ['after' => '2015-01-01', 'before' => self::BREAKOUT]],
-            'SV after'    => ['CloudCompli\WQInvestigator\SMARTS\StormwaterViolations', ['after' => self::BREAKOUT, 'before' => '2016-01-01']],
-            'SV before'   => ['CloudCompli\WQInvestigator\SMARTS\StormwaterViolations', ['after' => '2015-01-01', 'before' => self::BREAKOUT]],
-            'SV violation_type first'  => ['CloudCompli\WQInvestigator\SMARTS\StormwaterViolations', ['violation_type' => [self::BREAKOUT, 'Effluent']]],
-            'SV violation_type second' => ['CloudCompli\WQInvestigator\SMARTS\StormwaterViolations', ['violation_type' => ['Effluent', self::BREAKOUT]]],
+            'ESMR after'  => ['CloudCompli\WQInvestigator\CIWQS\ESMR', ['after' => $payload, 'before' => '2016-01-01']],
+            'ESMR before' => ['CloudCompli\WQInvestigator\CIWQS\ESMR', ['after' => '2015-01-01', 'before' => $payload]],
+            'SV after'    => ['CloudCompli\WQInvestigator\SMARTS\StormwaterViolations', ['after' => $payload, 'before' => '2016-01-01']],
+            'SV before'   => ['CloudCompli\WQInvestigator\SMARTS\StormwaterViolations', ['after' => '2015-01-01', 'before' => $payload]],
+            'SV violation_type first'  => ['CloudCompli\WQInvestigator\SMARTS\StormwaterViolations', ['violation_type' => [$payload, 'Effluent']]],
+            'SV violation_type second' => ['CloudCompli\WQInvestigator\SMARTS\StormwaterViolations', ['violation_type' => ['Effluent', $payload]]],
         ];
     }
 
@@ -80,13 +96,19 @@ class SoqlInjectionTest extends PHPUnit_Framework_TestCase
      */
     public function testNoStringOptionCanEscapeItsLiteral()
     {
-        foreach(self::stringPositions() as $label => $case){
-            list($class, $options) = $case;
+        foreach(self::payloads() as $payloadName => $payload){
+            foreach(self::stringPositions($payload) as $label => $case){
+                list($class, $options) = $case;
 
-            $dataset = new $class();
-            $dataset->setOptions($options);
+                $dataset = new $class();
+                $dataset->setOptions($options);
 
-            $this->assertPayloadStaysInsideALiteral($dataset->compileWhere(), 'OR 1=1 --', $label);
+                $this->assertPayloadStaysInsideALiteral(
+                    $dataset->compileWhere(),
+                    'OR 1=1 --',
+                    $label.' / '.$payloadName
+                );
+            }
         }
     }
 
@@ -131,7 +153,10 @@ class SoqlInjectionTest extends PHPUnit_Framework_TestCase
                 $method->getEndLine() - $method->getStartLine() + 1
             ));
 
-            preg_match_all("/array_key_exists\('([a-z_]+)', \\\$this->_options\)/", $source, $matches);
+            // Deliberately loose about how the option is read — array_key_exists,
+            // isset, a direct index, either quote style, any spacing. A narrower
+            // pattern is one someone can word around without noticing.
+            preg_match_all('/_options\s*\[\s*[\'"]([a-z_]+)[\'"]\s*\]/', $source, $matches);
             $read = array_values(array_unique($matches[1]));
 
             sort($read);
@@ -204,6 +229,24 @@ class SoqlInjectionTest extends PHPUnit_Framework_TestCase
         $this->assertSame(
             "(parameter = 'Selenium, Total')"
                 ." AND ((sample_date between '2015-01-01T00:00:00' and '2016-01-01T00:00:00'))",
+            $params['$where']
+        );
+    }
+
+    /** The same bug, and the same fix, lives in both classes. */
+    public function testViolationsMakeQueryParametersCombinesACallerSuppliedWhereClause()
+    {
+        $violations = new StormwaterViolations();
+        $violations->setOptions([
+            'after' => '2015-01-01T00:00:00',
+            'before' => '2016-01-01T00:00:00',
+        ]);
+
+        $params = $violations->makeQueryParameters(['$where' => "violation_type = 'Effluent'"]);
+
+        $this->assertSame(
+            "(violation_type = 'Effluent')"
+                ." AND ((occurred_on > '2015-01-01T00:00:00' and occurred_on < '2016-01-01T00:00:00'))",
             $params['$where']
         );
     }

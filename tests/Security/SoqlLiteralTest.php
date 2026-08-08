@@ -20,6 +20,19 @@ class SoqlLiteralTest extends PHPUnit_Framework_TestCase
     }
 
     /**
+     * EVERY quote has to be doubled, not just the first. Escaping only the first
+     * occurrence passes any suite whose payloads carry a single quote, and still
+     * lets a value close its literal.
+     */
+    public function testTextDoublesEveryQuoteNotJustTheFirst()
+    {
+        $this->assertSame("'x'''' OR 1=1 --'", SoqlLiteral::text("x'' OR 1=1 --"));
+        $this->assertSame("'x'''''' OR 1=1 --'", SoqlLiteral::text("x''' OR 1=1 --"));
+        $this->assertSame("''''''''''", SoqlLiteral::text("''''"));
+        $this->assertSame("'a''b''c''d'", SoqlLiteral::text("a'b'c'd"));
+    }
+
+    /**
      * Backslash is not an escape inside a single-quoted SoQL literal, so a value
      * ending in one must not be able to consume the closing quote.
      */
@@ -52,6 +65,8 @@ class SoqlLiteralTest extends PHPUnit_Framework_TestCase
             'false' => [false],
             'array' => [['a']],
             'object' => [new stdClass()],
+            'object with __toString' => [new SoqlLiteralStringable()],
+            'resource' => [fopen('php://memory', 'r')],
         ];
     }
 
@@ -66,6 +81,47 @@ class SoqlLiteralTest extends PHPUnit_Framework_TestCase
         $this->assertSame('33.68813', SoqlLiteral::number('33.68813'));
         $this->assertSame('20000', SoqlLiteral::number('20000'));
         $this->assertSame('20000', SoqlLiteral::number(20000));
+    }
+
+    /**
+     * Callers pass real floats, not their string spellings. On PHP 5.6 a plain
+     * (string) cast honours LC_NUMERIC, so under a comma-decimal locale a
+     * coordinate renders as "33,68813" — which the grammar check would refuse,
+     * turning every within_circle query into an exception.
+     */
+    public function testNumberAcceptsRealFloatsIndependentlyOfLocale()
+    {
+        $original = setlocale(LC_NUMERIC, '0');
+
+        $this->assertSame('33.68813', SoqlLiteral::number(33.68813));
+        $this->assertSame('-117.819', SoqlLiteral::number(-117.819));
+        $this->assertSame('1', SoqlLiteral::number(1.0));
+        $this->assertSame('20000', SoqlLiteral::number(20000));
+
+        // Only asserts under a locale the box actually has installed.
+        if(setlocale(LC_NUMERIC, 'de_DE.UTF-8', 'de_DE', 'German_Germany.1252') !== false){
+            $this->assertSame('33.68813', SoqlLiteral::number(33.68813));
+        }
+
+        setlocale(LC_NUMERIC, $original === false ? 'C' : $original);
+    }
+
+    /**
+     * @dataProvider nonFiniteFloats
+     */
+    public function testNumberRejectsNonFiniteFloats($value)
+    {
+        $this->setExpectedException('InvalidArgumentException');
+        SoqlLiteral::number($value);
+    }
+
+    public static function nonFiniteFloats()
+    {
+        return [
+            'INF'  => [INF],
+            '-INF' => [-INF],
+            'NAN'  => [NAN],
+        ];
     }
 
     public function testNumberNormalisesToSoqlsNumberGrammar()
@@ -97,8 +153,18 @@ class SoqlLiteralTest extends PHPUnit_Framework_TestCase
             'empty'          => [''],
             'null'           => [null],
             'true'           => [true],
+            'false'          => [false],
             'array'          => [[1]],
             'object'         => [new stdClass()],
+            'resource'       => [fopen('php://memory', 'r')],
         ];
+    }
+}
+
+class SoqlLiteralStringable
+{
+    public function __toString()
+    {
+        return "x' OR 1=1 --";
     }
 }

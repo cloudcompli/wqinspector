@@ -33,10 +33,12 @@ class SoqlLiteral
      */
     public static function text($value)
     {
-        if(is_bool($value) || is_null($value) || is_array($value) || is_object($value)){
+        if(!is_scalar($value) || is_bool($value)){
             throw new InvalidArgumentException('SoQL string literal expects a scalar value, got '.gettype($value));
         }
 
+        // str_replace, not a limited preg_replace: every quote has to be doubled.
+        // Escaping only the first leaves the rest free to close the literal.
         return "'".str_replace("'", "''", (string)$value)."'";
     }
 
@@ -60,11 +62,23 @@ class SoqlLiteral
      */
     public static function number($value)
     {
-        if(is_bool($value) || !is_scalar($value)){
+        if(!is_scalar($value) || is_bool($value)){
             throw new InvalidArgumentException('SoQL numeric literal expects a number, got '.gettype($value));
         }
 
-        $candidate = trim((string)$value);
+        if(is_float($value)){
+            if(!is_finite($value)){
+                throw new InvalidArgumentException('SoQL numeric literal expects a finite number, got '.var_export($value, true));
+            }
+            // %F rather than casting: on PHP 5.6 a plain (string) cast honours
+            // LC_NUMERIC, so under a comma-decimal locale a coordinate arrives as
+            // "33,68813" and would be refused. %F is locale-independent, and 14
+            // decimals is PHP's own default display precision — enough to keep a
+            // coordinate intact without printing the float's binary residue.
+            $candidate = rtrim(rtrim(sprintf('%.14F', $value), '0'), '.');
+        }else{
+            $candidate = trim((string)$value);
+        }
 
         if(!preg_match('/^[+-]?[0-9]+(\.[0-9]+)?([eE][+-]?[0-9]+)?$/', $candidate)){
             throw new InvalidArgumentException('SoQL numeric literal expects a number, got '.var_export($value, true));
